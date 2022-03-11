@@ -51,16 +51,22 @@ exports.getPost = (req, res) => {
     .populate({ path: "author", select: "firstName lastName profilePic" })
     .populate({
       path: "comments",
-      populate: {
-        path: "user",
-        select: "firstName lastName profilePic",
-      },
+      populate: [
+        {
+          path: "user",
+          select: "firstName lastName profilePic",
+        },
+        {
+          path: "replies",
+          populate: { path: "user", select: "firstName lastName profilePic" },
+        },
+      ],
     })
     .exec((error, post) => {
       if (error) {
-        res.json(error);
+        return res.json(error);
       }
-      res.status(200).json(post);
+      return res.status(200).json(post);
     });
 };
 exports.getUserPosts = async (req, res) => {
@@ -170,10 +176,8 @@ exports.editPost = (req, res) => {
   Post.findByIdAndUpdate(
     { _id: req.params.id },
     {
-      title: req.body.title,
-      excerpt: req.body.excerpt,
       content: req.body.content,
-      imgUrl: req.body.imgUrl,
+      img: req.body.img,
     }
   )
     .then(() => {
@@ -214,7 +218,7 @@ exports.likePost = async (req, res) => {
       return res.status(200).json("Post has been disliked");
     }
   } catch (error) {
-    res.status(500).json(error);
+    return res.status(500).json(error);
   }
 };
 
@@ -235,8 +239,17 @@ exports.likeComment = async (req, res) => {
       return res.status(200).json("Comment has been disliked");
     }
   } catch (error) {
-    res.status(500).json(error);
+    return res.status(500).json(error);
   }
+};
+
+exports.getComment = async (req, res) => {
+  Comment.findById(req.params.id).exec((error, post) => {
+    if (error) {
+      return res.json(error);
+    }
+    return res.status(200).json(post);
+  });
 };
 
 exports.addComment = async (req, res) => {
@@ -272,10 +285,62 @@ exports.addComment = async (req, res) => {
     });
 };
 
+exports.editComment = async (req, res) => {
+  try {
+    await Comment.findByIdAndUpdate(
+      { _id: req.params.id },
+      {
+        content: req.body.content,
+      }
+    );
+    Post.findOne({ comments: req.params.id })
+      .populate({
+        path: "comments",
+        populate: [
+          {
+            path: "user",
+            select: "firstName lastName profilePic",
+          },
+          {
+            path: "replies",
+            populate: { path: "user", select: "firstName lastName profilePic" },
+          },
+        ],
+      })
+      .exec((error, post) => {
+        if (error) {
+          return res.status(500).json(error.message);
+        }
+        return res.status(200).json(post.comments);
+      });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(error);
+  }
+};
 exports.deleteComment = async (req, res) => {
   try {
-    await Comment.findByIdAndDelete(req.params.commentId);
-    return res.status(200).json("Comment successfully deleted");
+    await Comment.findByIdAndDelete(req.params.id);
+    Post.findOne({ comments: req.params.id })
+      .populate({
+        path: "comments",
+        populate: [
+          {
+            path: "user",
+            select: "firstName lastName profilePic",
+          },
+          {
+            path: "replies",
+            populate: { path: "user", select: "firstName lastName profilePic" },
+          },
+        ],
+      })
+      .exec((error, post) => {
+        if (error) {
+          return res.status(500).json(error.message);
+        }
+        return res.status(200).json(post.comments);
+      });
   } catch (error) {
     return res.status(500).json("Could not find comment");
   }

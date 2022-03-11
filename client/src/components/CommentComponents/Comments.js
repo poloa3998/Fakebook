@@ -2,13 +2,14 @@ import React from "react";
 
 import Comment from "./Comment";
 
-function Comments({ comments }) {
+function Comments({ authorId, comments, setPostComments, setLatestPost }) {
   return (
     <section>
       {comments.map((comment) => {
         return (
           <Comment
             key={comment._id}
+            authorId={authorId}
             commentId={comment._id}
             userId={comment.user._id}
             profilePic={comment.user.profilePic}
@@ -18,6 +19,8 @@ function Comments({ comments }) {
             likes={comment.likes}
             replies={comment.replies}
             timestamp={comment.createdAt}
+            setPostComments={setPostComments}
+            setLatestPost={setLatestPost}
           />
         );
       })}

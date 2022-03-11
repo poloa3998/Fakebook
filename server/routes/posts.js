@@ -8,7 +8,9 @@ const {
   deletePost,
   likePost,
   likeComment,
+  getComment,
   addComment,
+  editComment,
   addReply,
   getUserPosts,
   getTimeline,
@@ -20,8 +22,14 @@ router.get(
   passport.authenticate("jwt", { session: false }),
   getTimeline
 );
-router.get("/:userId", getUserPosts);
 router.get("/:id", getPost);
+router.put("/:id", passport.authenticate("jwt", { session: false }), editPost);
+
+router.delete(
+  "/:id",
+  passport.authenticate("jwt", { session: false }),
+  deletePost
+);
 router.post(
   "/create",
   passport.authenticate("jwt", { session: false }),
@@ -33,29 +41,29 @@ router.put(
   likePost
 );
 
+router.get("/currentuser/:userId", getUserPosts);
+router.get(
+  "/comments/:id",
+  passport.authenticate("jwt", { session: false }),
+  getComment
+);
+router.post(
+  "/comments/:id",
+  passport.authenticate("jwt", { session: false }),
+  addComment
+);
 router.put(
-  "/:id/edit",
+  "/comments/:id",
   passport.authenticate("jwt", { session: false }),
-  editPost
-);
-
-router.delete(
-  "/:id/delete",
-  passport.authenticate("jwt", { session: false }),
-  deletePost
+  editComment
 );
 router.delete(
-  "/comments/:commentId/delete",
+  "/comments/:id",
   passport.authenticate("jwt", { session: false }),
   deleteComment
 );
 router.post(
-  "/:id/comments/create",
-  passport.authenticate("jwt", { session: false }),
-  addComment
-);
-router.post(
-  "/comments/:commentId/create",
+  "/comments/:commentId/reply",
   passport.authenticate("jwt", { session: false }),
   addReply
 );

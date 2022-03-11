@@ -11,6 +11,7 @@ import Comments from "../CommentComponents/Comments";
 import PostModal from "./PostModal";
 import { PostContext } from "../../context/posts";
 import NewComment from "../CommentComponents/NewComment";
+import { AuthContext } from "../../context/auth";
 
 function Post({
   id,
@@ -24,6 +25,7 @@ function Post({
   timestamp,
 }) {
   const { likePost } = useContext(PostContext);
+  const { loggedInUser } = useContext(AuthContext);
   const [liked, setLiked] = useState(false);
   const [postLikes, setPostLikes] = useState(0);
   const [postComments, setPostComments] = useState([]);
@@ -31,6 +33,8 @@ function Post({
   const [displayAllComments, setDisplayAllComments] = useState(false);
   const [latestPost, setLatestPost] = useState([]);
   const [modalActive, setModalActive] = useState(false);
+  const [editPostActive, setEditPostActive] = useState(false);
+  const [deletePostActive, setDeletePostActive] = useState(false);
   timestamp = DateTime.fromISO(timestamp);
   useEffect(() => {
     setPostLikes(likes.length);
@@ -72,11 +76,22 @@ function Post({
               />
             </div>
           </div>
-          <BsThreeDots
-            className="h-9 w-9 p-2 text-gray-500  hover:bg-gray-100 rounded-full cursor-pointer"
-            onClick={() => setModalActive(!modalActive)}
-          />
-          {!modalActive ? null : <PostModal />}
+          {loggedInUser.id !== authorId ? null : (
+            <BsThreeDots
+              className="h-9 w-9 p-2 text-gray-500  hover:bg-gray-100 rounded-full cursor-pointer"
+              onClick={() => setModalActive(!modalActive)}
+            />
+          )}
+          {!modalActive ? null : (
+            <PostModal
+              id={id}
+              setModalActive={setModalActive}
+              setEditPostActive={setEditPostActive}
+              editPostActive={editPostActive}
+              setDeletePostActive={setDeletePostActive}
+              deletePostActive={deletePostActive}
+            />
+          )}
         </div>
         <p className="py-2">{message}</p>
       </div>
@@ -146,9 +161,19 @@ function Post({
             </div>
           )}
           {!displayAllComments && latestPost[0] ? (
-            <Comments comments={latestPost} />
+            <Comments
+              authorId={authorId}
+              comments={latestPost}
+              setPostComments={setPostComments}
+              setLatestPost={setLatestPost}
+            />
           ) : (
-            <Comments comments={postComments} />
+            <Comments
+              authorId={authorId}
+              comments={postComments}
+              setPostComments={setPostComments}
+              setLatestPost={setLatestPost}
+            />
           )}
           <NewComment
             id={id}

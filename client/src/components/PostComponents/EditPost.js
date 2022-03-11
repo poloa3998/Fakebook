@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useRef, useContext, useEffect } from "react";
 import { AuthContext } from "../../context/auth";
 import { PostContext } from "../../context/posts";
 import { AiFillPicture, AiOutlineClose } from "react-icons/ai";
@@ -6,18 +6,17 @@ import { BsFillFileImageFill } from "react-icons/bs";
 import TextareaAutosize from "react-textarea-autosize";
 
 import axios from "axios";
-function NewPost({ setNewPostActive }) {
+function EditPost({ id, setEditPostActive }) {
   const { loggedInUser } = useContext(AuthContext);
-  const { createPost } = useContext(PostContext);
+  const { getPost, post, setPost, editPost } = useContext(PostContext);
   const [imageActive, setImageActive] = useState(false);
   const [file, setFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [disableButton, setDisableButton] = useState(false);
   const filePickerRef = useRef(null);
 
-  const [input, setInput] = useState("");
   const handleInput = (e) => {
-    setInput(e.target.value);
+    setPost({ ...post, [e.target.name]: e.target.value });
   };
   const onEnterPress = (e) => {
     if (e.key === "Enter" && e.shiftKey === false) {
@@ -41,7 +40,7 @@ function NewPost({ setNewPostActive }) {
     e.preventDefault();
     setDisableButton(true);
     if (!file) {
-      createPost(input);
+      editPost(id, post.content);
     } else {
       try {
         const fd = new FormData();
@@ -51,17 +50,16 @@ function NewPost({ setNewPostActive }) {
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
         });
-
-        createPost(input, res.data.files.filename);
+        editPost(id, post.content, res.data.files.filename);
       } catch (error) {
         console.log(error);
       }
     }
-    setNewPostActive(false);
+    setEditPostActive(false);
   };
 
   const displayPostButton = () => {
-    if (!file && input === "") {
+    if (!imagePreview && post?.content === "") {
       return (
         <button
           disabled={true}
@@ -70,7 +68,7 @@ function NewPost({ setNewPostActive }) {
           Post
         </button>
       );
-    } else if (file && input === "") {
+    } else if (file && post?.content === "") {
       return (
         <button
           disabled={disableButton}
@@ -92,6 +90,17 @@ function NewPost({ setNewPostActive }) {
       );
     }
   };
+  useEffect(() => {
+    getPost(id);
+    if (post?.img) {
+      setImagePreview(post?.img);
+      setImageActive(true);
+    }
+    return () => {
+      setImagePreview(null);
+      setImageActive(false);
+    };
+  }, [getPost, id, post?.img]);
   return (
     <div className="fixed flex flex-col justify-center items-center bg-gray-100/70 h-screen w-screen top-0 left-0 z-50">
       <form
@@ -100,12 +109,12 @@ function NewPost({ setNewPostActive }) {
       >
         <div className="flex justify-center border-b p-2">
           <div className="flex flex-1 items-center justify-end">
-            <p className="w-48 sm:w-[22rem]  text-center text-xl font-semibold text-black">
-              Create Post
+            <p className="w-72 sm:w-[22rem]  text-center text-xl font-semibold text-black">
+              Edit Post
             </p>
             <AiOutlineClose
               className="w-8 h-8 p-1 text-gray-500 bg-gray-200 cursor-pointer hover:bg-gray-300 rounded-full"
-              onClick={() => setNewPostActive(false)}
+              onClick={() => setEditPostActive(false)}
             />
           </div>
         </div>
@@ -126,7 +135,8 @@ function NewPost({ setNewPostActive }) {
           placeholder="What's on your mind?"
           minRows={imageActive ? "1" : "5"}
           maxRows="10"
-          value={input}
+          name="content"
+          value={post?.content}
           onChange={handleInput}
           onKeyDown={onEnterPress}
         />
@@ -178,4 +188,4 @@ function NewPost({ setNewPostActive }) {
   );
 }
 
-export default NewPost;
+export default EditPost;

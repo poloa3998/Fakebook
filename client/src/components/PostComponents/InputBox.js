@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { RiVideoAddFill } from "react-icons/ri";
 import { MdOutlineEmojiEmotions, MdAddPhotoAlternate } from "react-icons/md";
@@ -8,7 +8,6 @@ function InputBox() {
   const { loggedInUser } = useContext(AuthContext);
 
   const [newPostActive, setNewPostActive] = useState(false);
-  const filePickerRef = useRef(null);
 
   return (
     <div className="bg-white p-2 rounded-xl shadow-md text-gray-500 font-medium mt-6">
