@@ -19,7 +19,7 @@ A facebook clone that recreates a lot of facebook's functionality
 
 This project has the following features:
 
-- Login through Facebook
+- Login through Facebook(Not possible in live production mode, but works in development mode, facebook's requirements to make it work in live mode was too much of a hassle for me)
 - Change profile picture
 - Create Posts with images
 - Add Comments
